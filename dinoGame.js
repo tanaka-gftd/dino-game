@@ -264,10 +264,16 @@ function drawScore(){
 }
 
 
-//キー入力でジャンプするようにする
+//キー入力の処理
 document.onkeydown = function(e) {
+
   //スペースキーが入力されて、かつ、恐竜が下端にいたらジャンプ(ジャンプ中にジャンプができないようにする)
   if(e.key === ' ' && game.dino.moveY === 0){
     game.dino.moveY = -41;  //ジャンプの初速度(負数なのでジャンプの向きは上方向、数値が低いほどジャンプ力が増す)
-  }
+  };
+
+  //ゲームオーバー時は、エンターキーでゲームに再挑戦できる
+  if(e.key === 'Enter' && game.isGameOver === true){
+    init();
+  };
 };
