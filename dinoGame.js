@@ -93,7 +93,7 @@ function ticker(){
   };
 
   //敵バードはランダムなタイミングで生成
-  if(Math.floor(Math.random() * 100) === 0){
+  if(Math.floor(Math.random() * 200) === 0){
     createBird();
   };
 
@@ -109,7 +109,8 @@ function ticker(){
   //敵キャラクタの描画
   drawEnemies();
 
-  // TODO 当たり判定処理
+  //当たり判定処理
+  hitCheck();
 
   //カウンタの更新
   //カウンタの数は1ずつ増やし、カウント数が1000000まで行ったら、再び0からカウントするようにする(値が大きくなりすぎるのを防ぐ)
@@ -231,6 +232,27 @@ function drawEnemies(){
   //敵キャラの情報が格納された配列enemiesから各要素を取り出して描画していく
   for(const enemy of game.enemies){
     ctx.drawImage(enemy.image, enemy.x - enemy.width / 2, enemy.y - enemy.height / 2);
+  };
+};
+
+
+//当たり判定処理
+//恐竜が敵キャラに当たっていたらゲームオーバー
+function hitCheck(){
+
+  //恐竜に当たったかどうかを全ての敵キャラで判定するので、for文でループ
+  for(const enemy of game.enemies){
+    if(
+      Math.abs(game.dino.x - enemy.x) < game.dino.width / 2 + enemy.width / 2 &&
+      Math.abs(game.dino.y - enemy.y) < game.dino.height / 2 + enemy.height / 2
+    ) {
+      console.log('c')
+
+      game.isGameOver = true;  //ゲームオーバーのフラグをON
+      ctx.font = 'bold 100px serif';  ////ctx.font...文字の大きさや太さ、書体を設定
+      ctx.fillText(`Game Over!`, 150, 200);  //ctx.fillText(文章, x, y)...文章を、一番左上から右方向にx、下方向にyの位置に表示
+      clearInterval(game.timer);  //clearInterval()...以前に setInterval() の呼び出しによって確立されたタイマーを利用した繰り返し動作を取り消す
+    };
   };
 };
 
