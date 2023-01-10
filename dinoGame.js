@@ -243,11 +243,9 @@ function hitCheck(){
   //恐竜に当たったかどうかを全ての敵キャラで判定するので、for文でループ
   for(const enemy of game.enemies){
     if(
-      Math.abs(game.dino.x - enemy.x) < game.dino.width / 2 + enemy.width / 2 &&
-      Math.abs(game.dino.y - enemy.y) < game.dino.height / 2 + enemy.height / 2
+      Math.abs(game.dino.x - enemy.x) < game.dino.width * 0.8 / 2 + enemy.width * 0.9 / 2 &&
+      Math.abs(game.dino.y - enemy.y) < game.dino.height * 0.5 / 2 + enemy.height * 0.9 / 2
     ) {
-      console.log('c')
-
       game.isGameOver = true;  //ゲームオーバーのフラグをON
       ctx.font = 'bold 100px serif';  ////ctx.font...文字の大きさや太さ、書体を設定
       ctx.fillText(`Game Over!`, 150, 200);  //ctx.fillText(文章, x, y)...文章を、一番左上から右方向にx、下方向にyの位置に表示
