@@ -88,29 +88,31 @@ function ticker(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
   //敵サボテンはランダムなタイミングで生成
-  if(Math.floor(Math.random() * 100) === 0){
+  //スコアが増えるほど、敵サボテンの出現頻度増加
+  if(Math.floor(Math.random() * (100 - game.score / 100)) === 0){
     createCactus();
   };
 
   //敵バードはランダムなタイミングで生成
-  if(Math.floor(Math.random() * 200) === 0){
+  //スコアが増えるほど、敵バードの出現頻度増加
+  if(Math.floor(Math.random() * (100 - game.score / 100)) === 0){
     createBird();
   };
 
-  //恐竜の移動
-  moveDino();
+  //移動
+  moveDino();  //恐竜の移動
+  moveEnemies();  //敵キャラの移動
 
-  //敵の移動
-  moveEnemies();
-
-  //恐竜の描画
-  drawDino();
-
-  //敵キャラクタの描画
-  drawEnemies();
+  //描画
+  drawDino();  //恐竜の描画
+  drawEnemies();  //敵キャラの描画
+  drawScore();  //スコアの表示
 
   //当たり判定処理
   hitCheck();
+
+  //本関数が呼ばれるたびにスコア加算
+  game.score += 1;
 
   //カウンタの更新
   //カウンタの数は1ずつ増やし、カウント数が1000000まで行ったら、再び0からカウントするようにする(値が大きくなりすぎるのを防ぐ)
@@ -253,6 +255,13 @@ function hitCheck(){
     };
   };
 };
+
+
+//スコアの描画
+function drawScore(){
+  ctx.font = '24px serif';
+  ctx.fillText(`score: ${game.score}`, 0, 30);
+}
 
 
 //キー入力でジャンプするようにする
