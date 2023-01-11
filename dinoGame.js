@@ -111,6 +111,7 @@ function ticker(){
   moveEnemies();  //敵キャラの移動
 
   //描画
+  drawSky();
   drawBackGrounds();  //背景の描画
   drawDino();  //恐竜の描画
   drawEnemies();  //敵キャラの描画
@@ -131,7 +132,7 @@ function ticker(){
 //恐竜の表示位置や移動速度などのデータを持つオブジェクトを設定する関数
 function createDino(){
   game.dino = {
-    x: game.image.dino.width / 2,  //画面の一番左から、恐竜の画像中心までの距離。 初期位置はゲーム画面の左端(左端から動かない)
+    x: game.image.dino.width / 2 + 10,  //画面の一番左から、恐竜の画像中心までの距離。 初期位置はゲーム画面の左端(左端から動かない)からちょっとだけ右に配置
     y: canvas.height - game.image.dino.height / 2,  //ゲーム画面の上端から恐竜の画像中心までの距離。 初期位置はゲーム画面の下端
     moveY: 0,  //恐竜のy軸方向の移動速度、つまりジャンプ速度(数学のy座標とは正負の向きが異なる点に注意！ プラスで下方向、マイナスで上方向)
     width: game.image.dino.width,  //恐竜の画像の横幅の数値
@@ -245,6 +246,13 @@ function moveEnemies(){
 };
 
 
+//空の描画
+function drawSky(){
+  ctx.fillStyle = 'rgb(143, 203, 250)';  //空の色
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+};
+
+
 //背景の描画
 function drawBackGrounds(){
 
@@ -253,11 +261,12 @@ function drawBackGrounds(){
   //配列backGroundsの要素をもとに背景を設定
   for(const backGround of game.backGrounds){
 
-    //背景は3段にする
+    //背景は4段にする
     //ctx.fillRectに渡す引数は4つ。最初の２つは初期位置(左端からの距離、上端からの距離)、３番目はオブジェクトの横幅、４番目はオブジェクトの縦幅
-    ctx.fillRect(backGround.x, backGround.y - 5, backGround.width, 5);  //下の段、一番横長
-    ctx.fillRect(backGround.x + 20, backGround.y - 10, backGround.width - 40, 5);  //中の段
-    ctx.fillRect(backGround.x + 50, backGround.y - 15, backGround.width - 100, 5);  //上の段
+    ctx.fillRect(backGround.x, backGround.y - 10, backGround.width, 10);  //上から4段目
+    ctx.fillRect(backGround.x + 20, backGround.y - 20, backGround.width - 40, 10);  //上から3段目
+    ctx.fillRect(backGround.x + 50, backGround.y - 30, backGround.width - 100, 10);  //上から2段目
+    ctx.fillRect(backGround.x + 75, backGround.y - 40, backGround.width - 150, 10);  //１番上の段
   };
 };
 
@@ -311,7 +320,7 @@ function hitCheck(){
 function drawScore(){
   ctx.font = '24px serif';
   ctx.fillStyle = 'black';  //背景の設定で文字色がsienna色になってしまったので、黒に戻しておく
-  ctx.fillText(`score: ${game.score}`, 0, 30);
+  ctx.fillText(`score: ${game.score}`, 15, 30);
 };
 
 
