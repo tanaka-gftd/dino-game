@@ -303,7 +303,9 @@ function hitCheck(){
   //恐竜に当たったかどうかを全ての敵キャラで判定するので、for文でループ
   for(const enemy of game.enemies){
     if(
-      Math.abs(game.dino.x - enemy.x) < game.dino.width * 0.8 / 2 + enemy.width * 0.9 / 2 &&
+      //恐竜と敵キャラが当たったかチェック
+      //恐竜と敵キャラの当たり判定も、ここで指定する
+      Math.abs(game.dino.x - enemy.x) < game.dino.width * 0.5 / 2 + enemy.width * 0.9 / 2 &&
       Math.abs(game.dino.y - enemy.y) < game.dino.height * 0.5 / 2 + enemy.height * 0.9 / 2
     ) {
       game.isGameOver = true;  //ゲームオーバーのフラグをON
