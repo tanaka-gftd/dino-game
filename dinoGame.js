@@ -42,6 +42,7 @@ const imageNames = ['bird', 'cactus', 'dino'];
 const game = {
   counter: 0,  //ゲーム開始から何フレーム目かを数えておくための数値
   enemies: [],  //フィールドに配置されている敵キャラクタを入れておく配列
+  backGrounds: [],  //背景オブジェクトを扱う
   image: {},  //ゲームに使用する画像データを入れておくオブジェクト
   isGameOver: true,  //ゲーム中かどうかを判断する真偽値
   score: 0,  //ゲームの点数
@@ -87,6 +88,11 @@ function ticker(){
   //パラパラ漫画のようにするため、本関数実行の度に一旦画面の中身をクリア
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
+  //背景の作成(ticker関数が10回呼ばれる毎に背景を作成する)
+  if(game.counter % 10 === 0){
+    createBackGround();
+  };
+
   //敵サボテンはランダムなタイミングで生成
   //スコアが増えるほど、敵サボテンの出現頻度増加
   if(Math.floor(Math.random() * (100 - game.score / 100)) === 0){
@@ -100,10 +106,12 @@ function ticker(){
   };
 
   //移動
+  moveBackGrounds();  //背景の移動
   moveDino();  //恐竜の移動
   moveEnemies();  //敵キャラの移動
 
   //描画
+  drawBackGrounds();  //背景の描画
   drawDino();  //恐竜の描画
   drawEnemies();  //敵キャラの描画
   drawScore();  //スコアの表示
@@ -162,6 +170,30 @@ function createBird(){
 };
 
 
+//背景を作成する関数
+//背景の部品は1つあたり横幅200pxで、for文を使って画面横いっぱいに埋め尽くす
+//ticker関数10回毎にcreateBackGround関数が呼ばれるので、'背景の横幅/背景の移動速度' が10になるように設定するとgood
+function createBackGround(){
+  game.backGrounds = [];
+  for(let x = 0; x <= canvas.width; x += 200){  //横幅200pxなので、+=200する
+    game.backGrounds.push({
+      x: x,
+      y: canvas.height,  //画面上端から、背景の下端までの距離
+      width: 200,  //背景の横幅
+      moveX: -20  //背景の移動速度
+    });
+  };
+};
+
+
+//背景移動用の関数
+function moveBackGrounds(){
+  for(const backGround of game.backGrounds){
+    backGround.x += backGround.moveX;  //表示位置を更新
+  }
+};
+
+
 //恐竜の移動
 //恐竜の移動は上下方向のみ(ジャンプのみ)
 function moveDino(){
@@ -213,6 +245,23 @@ function moveEnemies(){
 };
 
 
+//背景の描画
+function drawBackGrounds(){
+
+  ctx.fillStyle = 'sienna';  //背景の色。siennaは茶色風味(他の箇所の文字色も変わってしまうので、それらは個別に修正しておく)
+
+  //配列backGroundsの要素をもとに背景を設定
+  for(const backGround of game.backGrounds){
+
+    //背景は3段にする
+    //ctx.fillRectに渡す引数は4つ。最初の２つは初期位置(左端からの距離、上端からの距離)、３番目はオブジェクトの横幅、４番目はオブジェクトの縦幅
+    ctx.fillRect(backGround.x, backGround.y - 5, backGround.width, 5);  //下の段、一番横長
+    ctx.fillRect(backGround.x + 20, backGround.y - 10, backGround.width - 40, 5);  //中の段
+    ctx.fillRect(backGround.x + 50, backGround.y - 15, backGround.width - 100, 5);  //上の段
+  };
+};
+
+
 //恐竜の描画
 /* 
   ctx.drawImageで指定した座標は画像の左上になる事に注意。
@@ -250,6 +299,7 @@ function hitCheck(){
     ) {
       game.isGameOver = true;  //ゲームオーバーのフラグをON
       ctx.font = 'bold 100px serif';  ////ctx.font...文字の大きさや太さ、書体を設定
+      ctx.fillStyle = 'black';  //背景の設定で文字色がsienna色になってしまったので、黒に戻しておく
       ctx.fillText(`Game Over!`, 150, 200);  //ctx.fillText(文章, x, y)...文章を、一番左上から右方向にx、下方向にyの位置に表示
       clearInterval(game.timer);  //clearInterval()...以前に setInterval() の呼び出しによって確立されたタイマーを利用した繰り返し動作を取り消す
     };
@@ -260,8 +310,9 @@ function hitCheck(){
 //スコアの描画
 function drawScore(){
   ctx.font = '24px serif';
+  ctx.fillStyle = 'black';  //背景の設定で文字色がsienna色になってしまったので、黒に戻しておく
   ctx.fillText(`score: ${game.score}`, 0, 30);
-}
+};
 
 
 //キー入力の処理
