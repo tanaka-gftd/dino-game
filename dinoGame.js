@@ -311,7 +311,7 @@ function hitCheck(){
       game.isGameOver = true;  //ゲームオーバーのフラグをON
       ctx.font = 'bold 100px serif';  ////ctx.font...文字の大きさや太さ、書体を設定
       ctx.fillStyle = 'black';  //背景の設定で文字色がsienna色になってしまったので、黒に戻しておく
-      ctx.fillText(`Game Over!`, 150, 200);  //ctx.fillText(文章, x, y)...文章を、一番左上から右方向にx、下方向にyの位置に表示
+      ctx.fillText(`Game Over!`, 100, 200);  //ctx.fillText(文章, x, y)...文章を、一番左上から右方向にx、下方向にyの位置に表示
       clearInterval(game.timer);  //clearInterval()...以前に setInterval() の呼び出しによって確立されたタイマーを利用した繰り返し動作を取り消す
     };
   };
