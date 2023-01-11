@@ -42,7 +42,8 @@ const imageNames = ['bird', 'cactus', 'dino'];
 const game = {
   counter: 0,  //ゲーム開始から何フレーム目かを数えておくための数値
   enemies: [],  //フィールドに配置されている敵キャラクタを入れておく配列
-  backGrounds: [],  //背景オブジェクトを扱う
+  backGrounds: [],  //背景を扱う配列
+  clouds: [],  //雲を扱う配列
   image: {},  //ゲームに使用する画像データを入れておくオブジェクト
   isGameOver: true,  //ゲーム中かどうかを判断する真偽値
   score: 0,  //ゲームの点数
@@ -93,6 +94,11 @@ function ticker(){
     createBackGround();
   };
 
+  //雲の作成(ticker関数が25回呼ばれる毎に雲を作成する)
+  if(game.counter % 25 === 0){
+    createClouds();
+  };
+
   //敵サボテンはランダムなタイミングで生成
   //スコアが増えるほど、敵サボテンの出現頻度増加
   if(Math.floor(Math.random() * (100 - game.score / 100)) === 0){
@@ -107,12 +113,14 @@ function ticker(){
 
   //移動
   moveBackGrounds();  //背景の移動
+  moveClouds();  //雲の移動
   moveDino();  //恐竜の移動
   moveEnemies();  //敵キャラの移動
 
   //描画
-  drawSky();
+  drawSky();  //空の描画
   drawBackGrounds();  //背景の描画
+  drawClouds();  //雲の描画
   drawDino();  //恐竜の描画
   drawEnemies();  //敵キャラの描画
   drawScore();  //スコアの表示
@@ -175,7 +183,7 @@ function createBird(){
 //背景の部品は1つあたり横幅200pxで、for文を使って画面横いっぱいに埋め尽くす
 //ticker関数10回毎にcreateBackGround関数が呼ばれるので、'背景の横幅/背景の移動速度' が10になるように設定するとgood
 function createBackGround(){
-  game.backGrounds = [];
+  game.backGrounds = [];  //呼ばれる度に配列の中身をクリア
   for(let x = 0; x <= canvas.width; x += 200){  //横幅200pxなので、+=200する
     game.backGrounds.push({
       x: x,
@@ -187,10 +195,33 @@ function createBackGround(){
 };
 
 
+//雲を作成する関数
+//実装方法は、背景を作成する関数と基本的に一緒
+function createClouds(){
+  game.clouds = [];
+  for(let x = 0; x <=canvas.width; x  += 250){
+    game.clouds.push({
+      x: x,
+      y: canvas.height,
+      width: 250,
+      moveX: -10
+    });
+  };
+};
+
+
 //背景移動用の関数
 function moveBackGrounds(){
   for(const backGround of game.backGrounds){
     backGround.x += backGround.moveX;  //表示位置を更新
+  }
+};
+
+
+//雲移動用の関数
+function moveClouds(){
+  for(const cloud of game.clouds){
+    cloud.x += cloud.moveX;  //表示位置を更新
   }
 };
 
@@ -271,6 +302,18 @@ function drawBackGrounds(){
 };
 
 
+//雲の描画
+//実装方法は、背景を描画する関数と基本的に一緒
+function drawClouds(){
+  ctx.fillStyle = 'white';
+  for(const cloud of game.clouds){
+    ctx.fillRect(cloud.x + 25, cloud.y - 380, cloud.width - 150, 10);
+    ctx.fillRect(cloud.x +  0, cloud.y - 370, cloud.width - 100, 30);
+    ctx.fillRect(cloud.x + 25, cloud.y - 340, cloud.width - 150, 10);
+  };
+};
+
+
 //恐竜の描画
 /* 
   ctx.drawImageで指定した座標は画像の左上になる事に注意。
@@ -322,7 +365,7 @@ function hitCheck(){
 function drawScore(){
   ctx.font = '24px serif';
   ctx.fillStyle = 'black';  //背景の設定で文字色がsienna色になってしまったので、黒に戻しておく
-  ctx.fillText(`score: ${game.score}`, 15, 30);
+  ctx.fillText(`score: ${game.score}`, 350, 30);
 };
 
 
