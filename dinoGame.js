@@ -47,7 +47,8 @@ const game = {
   image: {},  //ゲームに使用する画像データを入れておくオブジェクト
   isGameOver: true,  //ゲーム中かどうかを判断する真偽値
   score: 0,  //ゲームの点数
-  timer: null  //ゲームのフレーム切り替えを管理するタイマー
+  timer: null,  //ゲームのフレーム切り替えを管理するタイマー
+  enemyCountdown: 0  //敵の出現までの残りカウント
 };
 
 
@@ -79,6 +80,7 @@ function init(){
   game.score      = 0;
   createDino();  //恐竜の初期位置や移動速度などを設定する、createDino関数を呼び出す
   game.timer = setInterval(ticker, 30);  //30m秒ごとに、ticker関数を呼び出す(パラパラ漫画のようにしてアニメーションを実現)
+  game.enemyCountdown = 0;
 };
 
 
@@ -99,17 +101,23 @@ function ticker(){
     createClouds();
   };
 
-  //敵サボテンはランダムなタイミングで生成
-  //スコアが増えるほど、敵サボテンの出現頻度増加
-  if(Math.floor(Math.random() * (100 - game.score / 100)) === 0){
-    createCactus();
-  };
+  //敵出現の残りカウントが0になってから、敵を出現させるかどうかの判定を行う
+  if(game.enemyCountdown === 0){
+    //敵サボテンはランダムなタイミングで生成
+    //スコアが増えるほど、敵サボテンの出現頻度増加
+    if(Math.floor(Math.random() * (100 - game.score / 100)) === 0){
+      createCactus();
+      game.enemyCountdown += 25;  //ここでプラスしたカウント分だけ、敵キャラクタは再出現しない
+    };
 
-  //敵バードはランダムなタイミングで生成
-  //スコアが増えるほど、敵バードの出現頻度増加
-  if(Math.floor(Math.random() * (100 - game.score / 100)) === 0){
-    createBird();
+    //敵バードはランダムなタイミングで生成
+    //スコアが増えるほど、敵バードの出現頻度増加
+    if(Math.floor(Math.random() * (200 - game.score / 100)) === 0){
+      createBird();
+      game.enemyCountdown += 25;  //ここでプラスしたカウント分だけ、敵キャラクタは再出現しない
+    };
   };
+  
 
   //移動
   moveBackGrounds();  //背景の移動
@@ -134,6 +142,12 @@ function ticker(){
   //カウンタの更新
   //カウンタの数は1ずつ増やし、カウント数が1000000まで行ったら、再び0からカウントするようにする(値が大きくなりすぎるのを防ぐ)
   game.counter = (game.counter + 1) % 1000000;
+
+  //ticker関数が呼ばれる毎に、敵出現までの残りカウントを1つ減らす
+  //残りカウントが0なら減らさない
+  if(game.enemyCountdown !== 0){
+    game.enemyCountdown -= 1;
+  };
 };
 
 
