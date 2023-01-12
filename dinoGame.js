@@ -45,12 +45,17 @@ const game = {
   backGrounds: [],  //背景を扱う配列
   clouds: [],  //雲を扱う配列
   image: {},  //ゲームに使用する画像データを入れておくオブジェクト
-  isGameOver: true,  //ゲーム中かどうかを判断する真偽値
+  //isGameOver: true,  //ゲーム中かどうかを判断する真偽値 → stateに置き換えた
+  state: 'loading',  //ゲームの状態を管理する変数
   score: 0,  //ゲームの点数
   timer: null,  //ゲームのフレーム切り替えを管理するタイマー
-  enemyCountdown: 0  //敵の出現までの残りカウント
+  enemyCountdown: 0,  //敵の出現までの残りカウント
+  bgm1: new Audio('bgm/fieldSong.mp3'),  //ゲーム中のBGM
+  bgm2: new Audio('bgm/jump.mp3')  //ジャンプ音
 };
 
+//BGMのループ再生ON
+game.bgm1.loop = true;
 
 //ゲームで使用する画像を読み込んでいく
 //配列に格納された文字列を元に、画像のPathを作成していく
@@ -73,14 +78,38 @@ for (const imageName of imageNames){
 
 
 //ゲームの初期化用関数
+//元々本関数は値の初期化を行う関数だったが、BGM導入後は、ゲーム開始時に音楽が流れるようにするため、init()は待機画面を描画する関数に変更した
 function init(){
   game.counter    = 0;
   game.enemies    = [];
-  game.isGameOver = false;
+  //game.isGameOver = false;  //状態はgame.stateで扱うので削除
   game.score      = 0;
-  createDino();  //恐竜の初期位置や移動速度などを設定する、createDino関数を呼び出す
-  game.timer = setInterval(ticker, 30);  //30m秒ごとに、ticker関数を呼び出す(パラパラ漫画のようにしてアニメーションを実現)
+  
+  //game.timer = setInterval(ticker, 30);  //30m秒ごとに、ticker関数を呼び出す(パラパラ漫画のようにしてアニメーションを実現)
   game.enemyCountdown = 0;
+  game.state = 'init';  //待機画面の状態
+
+  //以下、待機画面の描画
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  createBackGround();
+  createClouds();
+  createDino();  //恐竜の初期位置や移動速度などを設定する、createDino関数を呼び出す
+  drawSky();
+  drawBackGrounds();
+  drawClouds(); 
+  drawDino();
+  ctx.fillStyle = 'black';
+  ctx.font = 'bold 60px serif';
+  ctx.fillText('Press Space key', 150, 150);
+  ctx.fillText('to start', 280, 230);
+};
+
+
+//ゲームを開始する関数
+function start(){
+  game.state = 'gaming';  //ゲーム中を表す状態
+  game.bgm1.play();  //BGMを鳴らす
+  game.timer = setInterval(ticker, 30);
 };
 
 
@@ -377,7 +406,9 @@ function hitCheck(){
       Math.abs(game.dino.x - enemy.x) < game.dino.width * 0.5 / 2 + enemy.width * 0.9 / 2 &&
       Math.abs(game.dino.y - enemy.y) < game.dino.height * 0.5 / 2 + enemy.height * 0.9 / 2
     ) {
-      game.isGameOver = true;  //ゲームオーバーのフラグをON
+      //game.isGameOver = true;  //ゲームオーバーのフラグをON  //ゲームオーバーもgame.stateに統合
+      game.state = 'gameover';  //ゲームオーバーを表す状態
+      game.bgm1.pause();  //ゲームBGM停止
       ctx.font = 'bold 100px serif';  ////ctx.font...文字の大きさや太さ、書体を設定
       ctx.fillStyle = 'black';  //黒に戻しておく
       ctx.fillText(`Game Over!`, 100, 200);  //ctx.fillText(文章, x, y)...文章を、一番左上から右方向にx、下方向にyの位置に表示
@@ -398,13 +429,20 @@ function drawScore(){
 //キー入力の処理
 document.onkeydown = function(e) {
 
+  //待機画面でスペースキーを押すと、ゲーム開始
+  if(e.key === ' ' && game.state === 'init'){
+    start();
+  };
+
   //スペースキーが入力されて、かつ、恐竜が下端にいたらジャンプ(ジャンプ中にジャンプができないようにする)
-  if(e.key === ' ' && game.dino.moveY === 0){
+  //仕様変更により、ジャンプ実行の条件にゲーム実行中であることも加えた
+  if(e.key === ' ' && game.dino.moveY === 0 && game.state === 'gaming'){
     game.dino.moveY = -41;  //ジャンプの初速度(負数なのでジャンプの向きは上方向、数値が低いほどジャンプ力が増す)
+    game.bgm2.play();  //ジャンプ音再生
   };
 
   //ゲームオーバー時は、エンターキーでゲームに再挑戦できる
-  if(e.key === 'Enter' && game.isGameOver === true){
+  if(e.key === 'Enter' && game.state === 'gameover'){
     init();
   };
 };
