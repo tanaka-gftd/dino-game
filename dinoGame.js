@@ -441,8 +441,8 @@ document.onkeydown = function(e) {
     game.bgm2.play();  //ジャンプ音再生
   };
 
-  //ゲームオーバー時は、エンターキーでゲームに再挑戦できる
-  if(e.key === 'Enter' && game.state === 'gameover'){
+  //ゲームオーバー時は、スペースーキーで待機画面へ移行できる
+  if(e.key === ' ' && game.state === 'gameover'){
     init();
   };
 };
