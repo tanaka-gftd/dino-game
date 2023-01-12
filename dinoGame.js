@@ -89,13 +89,13 @@ function ticker(){
   //パラパラ漫画のようにするため、本関数実行の度に一旦画面の中身をクリア
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  //背景の作成(ticker関数が10回呼ばれる毎に背景を作成する)
-  if(game.counter % 10 === 0){
+  //背景の作成(ticker関数が20回呼ばれる毎に背景を作成する)
+  if(game.counter % 20 === 0){
     createBackGround();
   };
 
-  //雲の作成(ticker関数が25回呼ばれる毎に雲を作成する)
-  if(game.counter % 25 === 0){
+  //雲の作成(ticker関数が20回呼ばれる毎に雲を作成する)
+  if(game.counter % 20 === 0){
     createClouds();
   };
 
@@ -189,7 +189,7 @@ function createBackGround(){
       x: x,
       y: canvas.height,  //画面上端から、背景の下端までの距離
       width: 200,  //背景の横幅
-      moveX: -20  //背景の移動速度
+      moveX: -10  //背景の移動速度
     });
   };
 };
@@ -199,11 +199,11 @@ function createBackGround(){
 //実装方法は、背景を作成する関数と基本的に一緒
 function createClouds(){
   game.clouds = [];
-  for(let x = 0; x <=canvas.width; x  += 250){
+  for(let x = 0; x <=canvas.width; x  += 200){
     game.clouds.push({
       x: x,
       y: canvas.height,
-      width: 250,
+      width: 200,
       moveX: -10
     });
   };
@@ -307,9 +307,9 @@ function drawBackGrounds(){
 function drawClouds(){
   ctx.fillStyle = 'white';
   for(const cloud of game.clouds){
-    ctx.fillRect(cloud.x + 25, cloud.y - 380, cloud.width - 150, 10);
-    ctx.fillRect(cloud.x +  0, cloud.y - 370, cloud.width - 100, 30);
-    ctx.fillRect(cloud.x + 25, cloud.y - 340, cloud.width - 150, 10);
+    ctx.fillRect(cloud.x + 25, cloud.y - 380, cloud.width - 130, 10);
+    ctx.fillRect(cloud.x +  0, cloud.y - 370, cloud.width - 80, 30);
+    ctx.fillRect(cloud.x + 25, cloud.y - 340, cloud.width - 130, 10);
   };
 };
 
@@ -353,7 +353,7 @@ function hitCheck(){
     ) {
       game.isGameOver = true;  //ゲームオーバーのフラグをON
       ctx.font = 'bold 100px serif';  ////ctx.font...文字の大きさや太さ、書体を設定
-      ctx.fillStyle = 'black';  //背景の設定で文字色がsienna色になってしまったので、黒に戻しておく
+      ctx.fillStyle = 'black';  //黒に戻しておく
       ctx.fillText(`Game Over!`, 100, 200);  //ctx.fillText(文章, x, y)...文章を、一番左上から右方向にx、下方向にyの位置に表示
       clearInterval(game.timer);  //clearInterval()...以前に setInterval() の呼び出しによって確立されたタイマーを利用した繰り返し動作を取り消す
     };
@@ -364,7 +364,7 @@ function hitCheck(){
 //スコアの描画
 function drawScore(){
   ctx.font = '24px serif';
-  ctx.fillStyle = 'black';  //背景の設定で文字色がsienna色になってしまったので、黒に戻しておく
+  ctx.fillStyle = 'black';  //黒に戻しておく
   ctx.fillText(`score: ${game.score}`, 350, 30);
 };
 
