@@ -101,23 +101,8 @@ function ticker(){
     createClouds();
   };
 
-  //敵出現の残りカウントが0になってから、敵を出現させるかどうかの判定を行う
-  if(game.enemyCountdown === 0){
-    //敵サボテンはランダムなタイミングで生成
-    //スコアが増えるほど、敵サボテンの出現頻度増加
-    if(Math.floor(Math.random() * (100 - game.score / 100)) === 0){
-      createCactus();
-      game.enemyCountdown += 25;  //ここでプラスしたカウント分だけ、敵キャラクタは再出現しない
-    };
-
-    //敵バードはランダムなタイミングで生成
-    //スコアが増えるほど、敵バードの出現頻度増加
-    if(Math.floor(Math.random() * (200 - game.score / 100)) === 0){
-      createBird();
-      game.enemyCountdown += 25;  //ここでプラスしたカウント分だけ、敵キャラクタは再出現しない
-    };
-  };
-  
+  //敵キャラの作成
+  createEnemies();
 
   //移動
   moveBackGrounds();  //背景の移動
@@ -144,10 +129,7 @@ function ticker(){
   game.counter = (game.counter + 1) % 1000000;
 
   //ticker関数が呼ばれる毎に、敵出現までの残りカウントを1つ減らす
-  //残りカウントが0なら減らさない
-  if(game.enemyCountdown !== 0){
-    game.enemyCountdown -= 1;
-  };
+  game.enemyCountdown -= 1;
 };
 
 
@@ -166,9 +148,10 @@ function createDino(){
 
 //敵サボテンの作成
 //敵サボテンは画面下段で出現し、右端から左方向に移動する
-function createCactus(){
+function createCactus(createX){  
   game.enemies.push({
-    x: canvas.width + game.image.cactus.width / 2,  //初期位置、すなわち出現位置は画面右端
+    //x: canvas.width + game.image.cactus.width / 2,  //初期位置、すなわち出現位置は画面右端
+    x: createX,  /* 1行上書き換え、サボテンの出現x座標は直接指定するのではなく、本関数呼び出し時に引数として渡すようにする */
     y: canvas.height - game.image.cactus.height / 2,  //画面下端
     width: game.image.cactus.width,
     height: game.image.cactus.height,
@@ -190,6 +173,35 @@ function createBird(){
     moveX: -15,  //左方向に移動
     image: game.image.bird
   });
+};
+
+
+//敵キャラを出現させる
+function createEnemies(){
+
+  //敵出現の残りカウント0で、以下の処理を行う
+  if(game.enemyCountdown === 0){
+
+    //敵出現カウントを増やす
+    //増やすカウントは、点数が高くなるほど少ない値にする（=高スコアほど、再出現の間隔が狭まる）
+    //ただし、30未満の値は設定されないようにする
+    game.enemyCountdown = 60 - Math.floor(game.score / 100);
+    if(game.enemyCountdown <= 30) game.enemyCountdown = 30;
+
+    //乱数を用いて、敵の出現パターンを3つ用意
+    switch(Math.floor(Math.random() * 3)){
+      case 0:
+        createCactus(canvas.width + game.image.cactus.width / 2);
+        break;
+      case 1:
+        createCactus(canvas.width + game.image.cactus.width / 2);
+        createCactus(canvas.width + game.image.cactus.width * 3 / 2);
+        break;
+      case 2:
+        createBird();
+        break;
+    };
+  };
 };
 
 
