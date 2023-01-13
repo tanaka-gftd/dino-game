@@ -5,6 +5,14 @@
   （y座標の値の増減が、数学の座標と反対になっている）
 */
 
+/* 
+  全般
+
+  画像の位置の基準は、画像の中央部分となっている。
+  なので画像の座標を設定する際は、'width / 2' や 'height / 2' を加減させることが多い
+
+*/
+
 
 //HTML要素取得
 const canvas = document.getElementById('canvas'); 
@@ -13,6 +21,7 @@ const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');  
 
 /* 画像描画の確認用 */
+/* ctxの学習用として残しておく */
 /* 
 //ctx.fillStyle = 'red';  //塗りつぶしの色を設定(ここでは赤)
 // ctx.fillRect(30, 20, 150, 100);  //四角形を描画、引数は順に、四角形左上頂点のx座標、四角形左上頂点のy座標、横幅、縦幅
@@ -21,7 +30,7 @@ const ctx = canvas.getContext('2d');
 const dinoImage = new Image();
 
 //使用する画像のパスを指定
-dinoImage.src = `image/dino.png`;  
+dinoImage.src = `./image/dino.png`;  
 
 //画像の描画
 //ctx.drawImage(イメージオブジェクト, 左方向にずらしたい距離, 下方向にずらしたい距離) で画像を描画
@@ -41,17 +50,18 @@ const imageNames = ['bird', 'cactus', 'dino'];
 //グローバルに使えるよう、グローバルな位置で宣言
 const game = {
   counter: 0,  //ゲーム開始から何フレーム目かを数えておくための数値
+  enemyCountdown: 0,  //敵の出現までの残りカウント
   enemies: [],  //フィールドに配置されている敵キャラクタを入れておく配列
   backGrounds: [],  //背景を扱う配列
   clouds: [],  //雲を扱う配列
   image: {},  //ゲームに使用する画像データを入れておくオブジェクト
-  //isGameOver: true,  //ゲーム中かどうかを判断する真偽値 → stateに置き換えた
+  //isGameOver: true,  //ゲーム中かどうかを判断する真偽値 → stateに扱うようにした
   state: 'loading',  //ゲームの状態を管理する変数
   score: 0,  //ゲームの点数
+  HighScore: 500,  //ハイスコアの初期値（ハイスコアの値はゲームを再チャレンジしても保持される）
   timer: null,  //ゲームのフレーム切り替えを管理するタイマー
-  enemyCountdown: 0,  //敵の出現までの残りカウント
-  bgm1: new Audio('bgm/fieldSong.mp3'),  //ゲーム中のBGM
-  bgm2: new Audio('bgm/jump.mp3')  //ジャンプ音
+  bgm1: new Audio('./bgm/fieldSong.mp3'),  //ゲーム中のBGM
+  bgm2: new Audio('./bgm/jump.mp3')  //ジャンプ音
 };
 
 //BGMのループ再生ON
@@ -62,23 +72,29 @@ game.bgm1.loop = true;
 //画像を全て読み込んだら、ゲームの初期化用関数を呼び出す
 let imageLoadCounter = 0;
 for (const imageName of imageNames){
-  const imagePath = `image/${imageName}.png`;
+  const imagePath = `./image/${imageName}.png`;
   game.image[imageName] = new Image();
   game.image[imageName].src = imagePath;
+
+  //画像を読み込んだら実行
   game.image[imageName].onload = () => {
     imageLoadCounter += 1;
-    if(imageLoadCounter === imageNames.length){
+    if(imageLoadCounter === imageNames.length){  //全ての画像を読み込んだか確認
       console.log('画像のロードが完了しました。');
 
       //ゲームの初期化用関数呼び出し
       init();
-    }
-  }
+    };
+  };
 };
 
 
 //ゲームの初期化用関数
-//元々本関数は値の初期化を行う関数だったが、BGM導入後は、ゲーム開始時に音楽が流れるようにするため、init()は待機画面を描画する関数に変更した
+/* 
+  元々本関数は値の初期化を行う関数だったが、
+  BGM導入後は、ゲーム開始時に音楽が流れるようにするため、
+  init()は待機画面を描画する関数に仕様を変更した。
+*/
 function init(){
   game.counter    = 0;
   game.enemies    = [];
@@ -90,14 +106,16 @@ function init(){
   game.state = 'init';  //待機画面の状態
 
   //以下、待機画面の描画
+  //待機画面の時点で、背景、雲、恐竜、空、ハイスコアなどを描画しておく
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   createBackGround();
   createClouds();
-  createDino();  //恐竜の初期位置や移動速度などを設定する、createDino関数を呼び出す
+  createDino();
   drawSky();
   drawBackGrounds();
   drawClouds(); 
   drawDino();
+  drawScore();  //待機画面中は表示されるのはハイスコアのみ
   ctx.fillStyle = 'black';
   ctx.font = 'bold 60px serif';
   ctx.fillText('Press Space key', 150, 150);
@@ -109,7 +127,7 @@ function init(){
 function start(){
   game.state = 'gaming';  //ゲーム中を表す状態
   game.bgm1.play();  //BGMを鳴らす
-  game.timer = setInterval(ticker, 30);
+  game.timer = setInterval(ticker, 30);  //ticker関数を30m秒毎に呼び出し、ゲームの描画をパラパラ漫画のように更新していく
 };
 
 
@@ -118,7 +136,7 @@ function start(){
 function ticker(){
 
   //パラパラ漫画のようにするため、本関数実行の度に一旦画面の中身をクリア
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   //背景の作成(ticker関数が20回呼ばれる毎に背景を作成する)
   if(game.counter % 20 === 0){
@@ -165,7 +183,7 @@ function ticker(){
 //恐竜の表示位置や移動速度などのデータを持つオブジェクトを設定する関数
 function createDino(){
   game.dino = {
-    x: game.image.dino.width / 2 + 10,  //画面の一番左から、恐竜の画像中心までの距離。 初期位置はゲーム画面の左端(左端から動かない)からちょっとだけ右に配置
+    x: game.image.dino.width / 2 + 10,  //画面の一番左から、恐竜の画像中心までの距離。 初期位置はゲーム画面の左端からちょっとだけ右に配置(※恐竜は横移動しない)
     y: canvas.height - game.image.dino.height / 2,  //ゲーム画面の上端から恐竜の画像中心までの距離。 初期位置はゲーム画面の下端
     moveY: 0,  //恐竜のy軸方向の移動速度、つまりジャンプ速度(数学のy座標とは正負の向きが異なる点に注意！ プラスで下方向、マイナスで上方向)
     width: game.image.dino.width,  //恐竜の画像の横幅の数値
@@ -179,12 +197,12 @@ function createDino(){
 //敵サボテンは画面下段で出現し、右端から左方向に移動する
 function createCactus(createX){  
   game.enemies.push({
-    //x: canvas.width + game.image.cactus.width / 2,  //初期位置、すなわち出現位置は画面右端
-    x: createX,  /* 1行上書き換え、サボテンの出現x座標は直接指定するのではなく、本関数呼び出し時に引数として渡すようにする */
+    //x: canvas.width + game.image.cactus.width / 2,  //初期位置、すなわち出現位置は画面右端 
+    x: createX,  /* 1行上書き換え、サボテンの出現x座標を直接指定するのではなく、本関数呼び出し時に引数として渡すようにする */
     y: canvas.height - game.image.cactus.height / 2,  //画面下端
     width: game.image.cactus.width,
     height: game.image.cactus.height,
-    moveX: -10,  //左方向に移動
+    moveX: -10,  //移動速度（マイナスなので左方向に移動）
     image: game.image.cactus
   });
 };
@@ -199,7 +217,7 @@ function createBird(){
     y: birdY,
     width: game.image.bird.width,
     height: game.image.bird.height,
-    moveX: -15,  //左方向に移動
+    moveX: -15,   //移動速度（マイナスなので左方向に移動）
     image: game.image.bird
   });
 };
@@ -211,7 +229,7 @@ function createEnemies(){
   //敵出現の残りカウント0で、以下の処理を行う
   if(game.enemyCountdown === 0){
 
-    //敵出現カウントを増やす
+    //敵出現の残りカウントを増やす
     //増やすカウントは、点数が高くなるほど少ない値にする（=高スコアほど、再出現の間隔が狭まる）
     //ただし、30未満の値は設定されないようにする
     game.enemyCountdown = 60 - Math.floor(game.score / 100);
@@ -236,10 +254,11 @@ function createEnemies(){
 
 //背景を作成する関数
 //背景の部品は1つあたり横幅200pxで、for文を使って画面横いっぱいに埋め尽くす
-//ticker関数10回毎にcreateBackGround関数が呼ばれるので、'背景の横幅/背景の移動速度' が10になるように設定するとgood
+//ticker関数20回毎にcreateBackGround関数が呼ばれるので、'背景の横幅 / 背景の移動速度(の絶対値)' が20になるように設定するとgood
+//（正確には '背景の横幅 * 背景の移動速度(の絶対値)' の頻度で本関数が実行されるようにticker関数を設定する、の方が正しいかも）
 function createBackGround(){
-  game.backGrounds = [];  //呼ばれる度に配列の中身をクリア
-  for(let x = 0; x <= canvas.width; x += 200){  //横幅200pxなので、+=200する
+  game.backGrounds = [];  //呼ばれる度に背景が保存されている配列の中身をクリア
+  for(let x = 0; x <= canvas.width; x += 200){  //背景の横幅は200pxなので、+=200する
     game.backGrounds.push({
       x: x,
       y: canvas.height,  //画面上端から、背景の下端までの距離
@@ -266,18 +285,20 @@ function createClouds(){
 
 
 //背景移動用の関数
+//本関数が呼ばれる度に背景の表示位置を更新
 function moveBackGrounds(){
   for(const backGround of game.backGrounds){
-    backGround.x += backGround.moveX;  //表示位置を更新
-  }
+    backGround.x += backGround.moveX;
+  };
 };
 
 
 //雲移動用の関数
+//本関数が呼ばれる度に雲の表示位置を更新
 function moveClouds(){
   for(const cloud of game.clouds){
-    cloud.x += cloud.moveX;  //表示位置を更新
-  }
+    cloud.x += cloud.moveX;
+  };
 };
 
 
@@ -307,13 +328,14 @@ function moveDino(){
     game.dino.moveY = 0;  
   } else {
 
-    //描画毎にズレる距離が+3していく(ここでの+は下方向であることを忘れないように！)
+    //描画毎にズレる距離が+3していく
+    //ここでの+は下方向、よって上方向への移動速度はだんだん遅くなり、ジャンプの頂点(=移動速度が0となる点)に到達した後は落下していく
     /* 
       ジャンプの初速度は下記で設定してある通り、最初の描画で画像が-41移動、すなわち上方向に41移動し、
       順に画像が上方向にズレる距離が38,35,32,29...となっていき、0を下回り正負が逆転したら、今度は下方向に移動していく
     */
     game.dino.moveY += 3;  //値を減らすとジャンプ速度の減り方がゆっくりになるので、高くのんびりと飛ぶようになる。値を増やせばその逆となる
-  }
+  };
 };
 
 
@@ -328,13 +350,13 @@ function moveEnemies(){
   //画面の外に出た敵キャラを、配列から削除
   //ここでのxは、画面右端からの距離。
   //敵キャラクタのx座標が画像の横幅分を超えて外にでたら削除したいので、まだ外にはみ出てない物だけを残す
-  game.enemies = game.enemies.filter(enemy => enemy.x > -enemy.width);
+  game.enemies = game.enemies.filter(enemy => enemy.x > - enemy.width);
 };
 
 
 //空の描画
 function drawSky(){
-  ctx.fillStyle = 'rgb(143, 203, 250)';  //空の色
+  ctx.fillStyle = 'rgb(143, 203, 250)';  //空の色。水色風味(他の箇所の文字色も変わってしまうので、それらは個別に修正しておく)
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 };
 
@@ -348,17 +370,18 @@ function drawBackGrounds(){
   for(const backGround of game.backGrounds){
 
     //背景は4段にする
-    //ctx.fillRectに渡す引数は4つ。最初の２つは初期位置(左端からの距離、上端からの距離)、３番目はオブジェクトの横幅、４番目はオブジェクトの縦幅
+    //ctx.fillRectに渡す引数は4つ。最初の2つは初期位置(左端からの距離、上端からの距離)、3番目はオブジェクトの横幅、4番目はオブジェクトの縦幅
     ctx.fillRect(backGround.x, backGround.y - 10, backGround.width, 10);  //上から4段目
     ctx.fillRect(backGround.x + 20, backGround.y - 20, backGround.width - 40, 10);  //上から3段目
     ctx.fillRect(backGround.x + 50, backGround.y - 30, backGround.width - 100, 10);  //上から2段目
-    ctx.fillRect(backGround.x + 75, backGround.y - 40, backGround.width - 150, 10);  //１番上の段
+    ctx.fillRect(backGround.x + 75, backGround.y - 40, backGround.width - 150, 10);  //1番上の段
   };
 };
 
 
 //雲の描画
 //実装方法は、背景を描画する関数と基本的に一緒
+//雲は3段にする
 function drawClouds(){
   ctx.fillStyle = 'white';
   for(const cloud of game.clouds){
@@ -413,6 +436,12 @@ function hitCheck(){
       ctx.fillStyle = 'black';  //黒に戻しておく
       ctx.fillText(`Game Over!`, 100, 200);  //ctx.fillText(文章, x, y)...文章を、一番左上から右方向にx、下方向にyの位置に表示
       clearInterval(game.timer);  //clearInterval()...以前に setInterval() の呼び出しによって確立されたタイマーを利用した繰り返し動作を取り消す
+      if(game.score >= game.HighScore) {
+        game.HighScore = game.score;  //スコアがハイスコアよりも高ければ、ハイスコアも更新
+        ctx.font = '24px serif';
+        ctx.fillStyle = 'green'; 
+        ctx.fillText(`new record!!`, 500, 250);
+      };
     };
   };
 };
@@ -422,11 +451,19 @@ function hitCheck(){
 function drawScore(){
   ctx.font = '24px serif';
   ctx.fillStyle = 'black';  //黒に戻しておく
-  ctx.fillText(`score: ${game.score}`, 350, 30);
+
+  //ゲーム中はスコアとハイスコアを表示、待機画面中はハイスコアのみ表示する
+  if(game.state === 'gaming'){
+    ctx.fillText(`Score: ${game.score}`, 50, 30);
+    ctx.fillText(`Hi-Score: ${game.HighScore}`, 300, 30);
+  } else if (game.state === 'init'){
+    ctx.fillText(`Hi-Score: ${game.HighScore}`, 300, 30);
+  };
 };
 
 
 //キー入力の処理
+//ゲームの状態をstateで管理することで、スペースキーのみでの操作を実現
 document.onkeydown = function(e) {
 
   //待機画面でスペースキーを押すと、ゲーム開始
